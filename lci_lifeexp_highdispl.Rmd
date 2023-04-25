@@ -1,0 +1,218 @@
+---
+title: "LCI_Areas_HighRskPopulation_LifeExp"
+author: "AAABatt"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: 
+    toc: yes
+    fig_caption: yes
+    number_sections: yes
+    keep_md: yes
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r }
+#TEST_1
+            #Life Expectancy and Median Income Distributions
+                    #by Displacement Risk Group
+                        #KC,WA 2023
+#
+###https://gis-kingcounty.opendata.arcgis.com/maps/lci-opportunity-area-metrics-lci-opportunity-metrics-area
+###
+library(tidyverse)
+df1<-c(0)
+df1<-array(1L:628174L,dim = c(628174L,14L))
+df1[,]<-c(NA)
+df1<-read.csv(file=c("LCI_KC_04_2023.csv"),header=T)
+dff<-read.csv(file=c("LCI_KC_04_2023.csv"),header=T)
+df<-select(df1,c(OBJECTID,ZIP5,
+       median_income,
+       KCA_ACRES,GEO_ID_GRP,GEO_ID_TRT, Shape_Area,
+       limitedEng_pct,
+       disabled_pct,disabled_uninsured_pct,foodstamp_pct,LifeExpectancy ,life_exp_pctle,
+       displacement_risk))
+rm(df1)
+
+df$OBJECTID<-as.factor(df$OBJECTID)
+df$ZIP5<-as.factor(df$ZIP5)
+df$GEO_ID_GRP<-as.factor(df$GEO_ID_GRP)
+df$GEO_ID_TRT<-as.factor(df$GEO_ID_TRT)
+df$displacement_risk<-as.factor(df$displacement_risk)
+
+
+
+
+HighDisplcRsk<-filter(df,
+            displacement_risk==c("high"))
+
+AbovMuLifeExp<-filter(df,
+            LifeExpectancy>76)
+
+BelowMuLifeExp<-filter(df,
+            LifeExpectancy<76)
+
+
+
+
+#                               Histogram of Life Expectancy by Displacement Group KC
+hstoplt<-df %>% na.omit() %>%  ggplot(aes(x = LifeExpectancy,
+                                 fill=displacement_risk,
+                                title=c("KC Life Expectancy distribution by Displacement Risk"))) +       # remember aes()
+ geom_histogram(bins = 30,show.legend = T)+
+  facet_grid(displacement_risk~.,scales="free")
+print(hstoplt)
+#
+#
+#
+#
+#Density plots for Life Expectancy distribution by Displacement Group KC
+dnstyplt<-df %>% na.omit() %>%  ggplot(aes(x = LifeExpectancy,
+                                 colour="lightgrey",fill=displacement_risk,
+                                title=c("KC Life Expectancy distribution by Displacement Risk"))) +       # remember aes()
+ geom_density(alpha=0.5)
+print(dnstyplt)
+#
+dnstyplt1<-df %>% na.omit() %>%  ggplot(aes(x = LifeExpectancy,
+                                 fill=displacement_risk,
+                                title=c("KC Life Expectancy distribution by Displacement Risk"))) +       # remember aes()
+ geom_density(alpha=0.35)+
+  facet_grid(displacement_risk~.,scales="free")
+print(dnstyplt1)
+
+
+
+
+                #Median Income by Displacement Risk group
+hstopltM<-df %>% na.omit() %>%  ggplot(aes(x = median_income,
+                                 fill=displacement_risk,
+                                title=c("KC Median Income distribution by Displacement Risk"))) +       # remember aes()
+ geom_histogram(bins = 30,show.legend = T)+
+  facet_grid(displacement_risk~.)
+print(hstopltM)
+#
+#
+#
+#
+#Density plots
+dnstypltM<-df %>% na.omit() %>%  ggplot(aes(x = median_income,
+                                 colour="lightgrey",fill=displacement_risk,
+                                title=c("KC Median Income distribution by Displacement Risk"))) +       # remember aes()
+ geom_density(alpha=0.5)
+print(dnstypltM)
+#
+dnstypltM1<-df %>% na.omit() %>%  ggplot(aes(x = median_income,
+                                 fill=displacement_risk,
+                                title=c("KC Median Income distribution by Displacement Risk"))) +       # remember aes()
+ geom_density(alpha=0.35)+
+  facet_grid(displacement_risk~.,)
+print(dnstypltM1)
+
+
+
+#randomized normal distribution model of life expectancy(mu=76,sd=2) of size n=size of high displacement risk sample 
+rnorm(55157,76,sd=2) %>% hist()
+
+
+
+
+##Student's T-test for testing difference of means between sample and population
+#assumes normal distribution, independence, and as an, a prioi, declares the alpha (significance level) for cut off of p values
+#necessary for rejection ,or failure to reject the null hypothesis (H0) given particular xyz...
+#i.e.  1. nml dist, 2. ind sample / rep sample of population 3. sample variance and size 4. Confounding factors. 5. Design Flaws
+t.test(df$LifeExpectancy,mu = c(76), conf.level = 0.95)
+
+
+
+
+
+#                       High Displacement Risk
+#highdispl
+#1 KCA Acres
+HighDisplcRsk %>% arrange(desc(c(KCA_ACRES)))  %>% glimpse() %>% head(30)  %>% print() 
+HighDisplcRsk %>% arrange(desc(c(KCA_ACRES)))  %>% glimpse() %>% tail(30)  %>% print() 
+#2 Life Exp
+HighDisplcRsk %>% arrange(desc(c(LifeExpectancy)))  %>% glimpse() %>% head(30)  %>% print() 
+HighDisplcRsk %>% arrange(desc(c(LifeExpectancy)))  %>% glimpse() %>% tail(30)  %>% print() 
+#3 Median income
+HighDisplcRsk %>% arrange(desc(c(median_income)))  %>% glimpse() %>% head(30)  %>% print() 
+HighDisplcRsk %>% arrange(desc(c(median_income)))  %>% glimpse() %>% tail(30)  %>% print() 
+
+
+
+
+#summary of highdisplcrsk
+summary(HighDisplcRsk) %>% as.array()%>%View()
+summary(HighDisplcRsk) %>% as.array() %>% print()
+
+
+
+
+#                       Above Mu(mu=76) Life Expectancy
+#abovMuLifeExp
+#1 KCA Acres
+AbovMuLifeExp%>% arrange(desc(c(KCA_ACRES))) %>% head(30) %>% print()
+AbovMuLifeExp %>% arrange(desc(c(KCA_ACRES))) %>% tail(30) %>% print()
+
+#2 Life Exp
+AbovMuLifeExp %>% arrange(desc(c(LifeExpectancy))) %>% head(30) %>% print()
+AbovMuLifeExp %>% arrange(desc(c(LifeExpectancy))) %>% tail(30)  %>% print()
+#3 median income
+AbovMuLifeExp %>% arrange(desc(c(median_income))) %>% head(30)  %>% print()
+AbovMuLifeExp %>% arrange(desc(c(median_income))) %>% tail(30) %>% print()
+
+
+
+
+#summary of aboveMuLifeExp
+summary(AbovMuLifeExp) %>% as.array()%>% View()
+summary(AbovMuLifeExp) %>% as.array() %>% print()
+
+
+
+
+
+#                       Below Mu (mu=76) Life Expectancy 
+#BelowMuLifeExp
+#1 KCA Acres
+BelowMuLifeExp %>% arrange(desc(c(KCA_ACRES)))  %>% glimpse() %>% head(30)  %>% print() 
+BelowMuLifeExp %>% arrange(desc(c(KCA_ACRES)))  %>% glimpse() %>% tail(30)  %>% print() 
+
+#2 Life Exp
+BelowMuLifeExp %>% arrange(desc(c(LifeExpectancy)))  %>% glimpse() %>% head(30)  %>% print() 
+BelowMuLifeExp %>% arrange(desc(c(LifeExpectancy)))  %>% glimpse() %>% tail(30)  %>% print() 
+#3 median income
+BelowMuLifeExp %>% arrange(desc(c(median_income)))  %>% glimpse() %>% head(30)  %>% print() 
+BelowMuLifeExp %>% arrange(desc(c(median_income)))  %>% glimpse() %>% tail(30)  %>% print() 
+
+
+
+
+#summary of BelowMuLifeExp
+summary(BelowMuLifeExp) %>% as.array() 
+summary(BelowMuLifeExp) %>% as.array() %>% print()
+
+
+
+
+#               Boxplot of Life Expectancy LCI Areas 
+#                               KC,WA 2023
+#               
+boxplot(x=c(df$LifeExpectancy),col="blue",fill='blue',main = c("Boxplot of Life Expectancy LCI Areas KC,WA 2023"),
+     ylab=c("AGE in YEARS"),xlab=c())
+hst<-hist(df$LifeExpectancy,col=c("blue","green"),main = c("Life Expectancy by  LCI Areas KC,WA 2023"),
+     xlab=c("AGE in YEARS"),ylab=c("Counts/Frequency"))
+#
+#
+#
+628174*47
+```
+
+
+```{r df}
+summary(df$LifeExpectancy)
+```
+
